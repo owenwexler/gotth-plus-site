@@ -1,0 +1,104 @@
+package view
+
+import (
+	"github.com/owenwexler/gotth-plus-site/internal/docs"
+	"github.com/owenwexler/gotth-plus-site/internal/model"
+	"github.com/owenwexler/gotth-plus-site/internal/styles"
+)
+
+// DocPage renders one documentation page with its group's navigation beside it.
+templ DocPage(page docs.Doc, group docs.Group, counts model.PageVote) {
+	@Layout(page.Title+" · GOTTH+", page.Summary) {
+		@Header()
+		<div class="mx-auto flex w-full max-w-6xl flex-col gap-8 px-5 pb-16 pt-4 sm:px-8 lg:flex-row lg:gap-12">
+			@DocsNav(page.Slug)
+			<article class="min-w-0 flex-1 space-y-12">
+				<header class="space-y-3">
+					<p class="text-xs font-medium tracking-[0.18em] text-neutral-400 uppercase">{ group.Title }</p>
+					<h1 class="text-4xl font-semibold tracking-tight sm:text-5xl">{ page.Title }</h1>
+					<p class="text-lg leading-relaxed text-neutral-200">{ page.Summary }</p>
+				</header>
+				for _, section := range page.Sections {
+					<section id={ section.Anchor() } class="scroll-mt-8 space-y-4" aria-labelledby={ section.Anchor() + "-title" }>
+						<h2 id={ section.Anchor() + "-title" } class="text-2xl font-semibold tracking-tight">{ section.Title }</h2>
+						for _, block := range section.Blocks {
+							@DocBlock(block)
+						}
+					</section>
+				}
+				@VoteBox(page.Slug, counts, "")
+			</article>
+		</div>
+		@Footer()
+	}
+}
+
+// DocsNav is the sidebar. It is a menu on small screens and always visible from the large breakpoint up.
+// Alpine sets data-menu on the wrapper, and input.css shows or hides the nav from that attribute. It never
+// sets a style: the strict CSP blocks inline styles on the nodes a boosted navigation swaps in.
+// Its links are boosted and preloaded on hover.
+templ DocsNav(current string) {
+	<div class="lg:w-60 lg:shrink-0" x-data="disclosure" :data-menu="state">
+		<button
+			type="button"
+			@click="toggle"
+			:aria-expanded="open"
+			aria-controls="docs-nav"
+			class={ styles.GenerateSmallButtonClasses(), "w-full lg:hidden" }
+		>Pages</button>
+		<nav id="docs-nav" aria-label="Documentation" hx-boost="true" preload="mouseover" class="mt-4 space-y-6 lg:mt-0 lg:sticky lg:top-8">
+			for _, g := range docs.Groups() {
+				<div>
+					<p class="px-3 text-xs font-medium tracking-[0.18em] text-neutral-400 uppercase">{ g.Title }</p>
+					<ul class="mt-2 space-y-1">
+						for _, d := range g.Docs {
+							<li>
+								if d.Slug == current {
+									<a href={ templ.URL("/docs/" + d.Slug) } aria-current="page" class={ styles.GenerateNavLinkClasses(true) }>{ d.Title }</a>
+								} else {
+									<a href={ templ.URL("/docs/" + d.Slug) } class={ styles.GenerateNavLinkClasses(false) }>{ d.Title }</a>
+								}
+							</li>
+						}
+					</ul>
+				</div>
+			}
+		</nav>
+	</div>
+}
+
+// DocBlock renders one block of a section. Kind is "p", "code", "ul" or "table".
+templ DocBlock(b docs.Block) {
+	if b.Kind == "p" {
+		<p class="text-base leading-relaxed text-neutral-200">{ b.Text }</p>
+	} else if b.Kind == "code" {
+		<pre class="overflow-x-auto rounded-xl border border-white/15 bg-black/40 p-4 text-sm leading-relaxed text-neutral-100"><code>{ b.Text }</code></pre>
+	} else if b.Kind == "ul" {
+		<ul class="list-disc space-y-2 pl-6 text-base leading-relaxed text-neutral-200 marker:text-neutral-500">
+			for _, item := range b.Items {
+				<li>{ item }</li>
+			}
+		</ul>
+	} else if b.Kind == "table" {
+		<div class="overflow-x-auto rounded-xl border border-white/15">
+			<table class="w-full text-left text-sm">
+				<thead class="bg-white/5 text-neutral-300">
+					<tr>
+						for _, h := range b.Head {
+							<th scope="col" class="px-4 py-2 font-medium">{ h }</th>
+						}
+					</tr>
+				</thead>
+				<tbody class="divide-y divide-white/10">
+					for _, row := range b.Rows {
+						<tr class="align-top">
+							for _, cell := range row {
+								<td class="px-4 py-2 text-neutral-200">{ cell }</td>
+							}
+						</tr>
+					}
+				</tbody>
+			</table>
+		</div>
+	}
+}

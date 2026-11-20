@@ -1,0 +1,11 @@
+# Keep secrets, local data and build output out of the image's build context.
+.env
+.env.*
+!.env.example
+.git
+tmp/
+*.db
+*.db-shm
+*.db-wal
+static/output.css
+cmd/server/testdata/

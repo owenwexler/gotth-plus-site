@@ -1,0 +1,11 @@
+package view
+
+import "github.com/owenwexler/gotth-plus-site/internal/styles"
+
+templ ErrorText() {
+	<h1 class="text-white text-2xl">We are sorry, something went wrong.</h1>
+}
+
+templ ButtonLink(href string, label string) {
+	<a href={ templ.URL(href) } class={ styles.GenerateButtonLinkClasses() }>{ label }</a>
+}

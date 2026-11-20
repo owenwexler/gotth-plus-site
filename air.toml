@@ -1,0 +1,20 @@
+# Live reload with air (https://github.com/air-verse/air): make dev, or make air beside make dev-css.
+# air only reads .air.toml on its own, so run it as air -c air.toml (the Makefile does).
+
+[build]
+  # templ generate first, so the build uses *_templ.go files that match the .templ files
+  cmd = "templ generate && go build -o ./tmp/main ./cmd/server"
+  entrypoint = ["./tmp/main"]
+
+  # rebuild when Go or templ files change
+  include_ext = ["go", "templ"]
+
+  # the generated files change on every build; watching them would rebuild forever
+  exclude_regex = [".*_templ.go"]
+
+[proxy]
+  # reloads the browser after each rebuild: open http://localhost:7331 (the app's dev cross-origin
+  # protection already trusts this port). app_port must match Port in .env.
+  enabled = true
+  proxy_port = 7331
+  app_port = 3000

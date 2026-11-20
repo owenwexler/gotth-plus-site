@@ -1,0 +1,52 @@
+package view
+
+import (
+	"fmt"
+
+	"github.com/owenwexler/gotth-plus-site/internal/model"
+	"github.com/owenwexler/gotth-plus-site/internal/styles"
+)
+
+// VoteBox asks whether a page helped. answered is "" before the visitor votes, then "yes" or "no".
+// It replaces itself by id (#vote), so the same markup serves the page and the response to a vote.
+templ VoteBox(slug string, counts model.PageVote, answered string) {
+	<section id="vote" aria-labelledby="vote-title" class="w-full rounded-2xl border border-white/15 bg-white/5 p-5 sm:p-6">
+		<h2 id="vote-title" class="text-lg font-semibold tracking-tight">Was this page helpful?</h2>
+		if answered == "" {
+			<div class="mt-4 flex flex-wrap items-center gap-3">
+				<button
+					type="button"
+					class={ styles.GenerateSmallButtonClasses(), "relative" }
+					hx-post={ voteURL(slug, "yes") }
+					hx-target="#vote"
+					hx-swap="outerHTML"
+					hx-disabled-elt="this"
+				>Yes</button>
+				<button
+					type="button"
+					class={ styles.GenerateSmallButtonClasses(), "relative" }
+					hx-post={ voteURL(slug, "no") }
+					hx-target="#vote"
+					hx-swap="outerHTML"
+					hx-disabled-elt="this"
+				>No</button>
+			</div>
+			<p class="mt-3 text-sm text-neutral-400">{ voteSummary(counts) }</p>
+		} else {
+			<p class="mt-3 text-sm text-neutral-200" role="status">Thanks for your feedback. { voteSummary(counts) }</p>
+		}
+	</section>
+}
+
+func voteURL(slug string, vote string) string {
+	return "/docs/" + slug + "/vote?vote=" + vote
+}
+
+func voteSummary(c model.PageVote) string {
+	total := c.Helpful + c.NotHelpful
+	if total == 0 {
+		return "Be the first to answer."
+	}
+
+	return fmt.Sprintf("%d of %d readers found this page helpful.", c.Helpful, total)
+}

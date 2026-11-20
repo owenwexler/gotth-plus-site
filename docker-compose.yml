@@ -1,0 +1,59 @@
+# The production stack on one server: a one-off migration that runs first, the app (no published
+# ports; only Caddy can reach it), and Caddy in front for HTTPS. DEPLOYMENT.md explains how to use it.
+#
+#   SITE_ADDRESS=example.com docker compose up -d --build
+name: gotth-plus-site
+
+services:
+  migrate:
+    build: .
+    image: gotth-plus-site:latest
+    entrypoint: ["/app/migrate"]
+    volumes:
+      - data:/data
+    networks: [web]
+    restart: "no"
+
+  app:
+    build: .
+    image: gotth-plus-site:latest
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    volumes:
+      - data:/data
+    environment:
+      # Caddy is the only peer that reaches the app, so its network is the trusted proxy: the rate limiter
+      # then keys on the client address Caddy forwards, not on Caddy (DEPLOYMENT.md, "Behind a proxy").
+      TrustedProxies: "172.28.0.0/16"
+    networks: [web]
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    restart: unless-stopped
+
+  caddy:
+    image: caddy:2
+    depends_on: [app]
+    environment:
+      SITE_ADDRESS: ${SITE_ADDRESS:?set SITE_ADDRESS to the domain name, for example example.com}
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    networks: [web]
+    restart: unless-stopped
+
+networks:
+  web:
+    ipam:
+      config:
+        - subnet: 172.28.0.0/16
+
+volumes:
+  data:
+  caddy_data:
+  caddy_config:

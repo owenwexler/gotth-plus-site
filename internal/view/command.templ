@@ -1,0 +1,20 @@
+package view
+
+import "github.com/owenwexler/gotth-plus-site/internal/styles"
+
+// CommandResult replaces #command-result. An empty command is the placeholder shown before the first answer.
+templ CommandResult(command string) {
+	<div id="command-result" aria-live="polite" class="min-w-0 w-full">
+		if command == "" {
+			<p class="text-sm text-neutral-400">Your command will appear here.</p>
+		} else {
+			<div x-data="copyText" class="flex flex-col items-start gap-3">
+				<pre class="w-full overflow-hidden rounded-xl border border-white/15 bg-black/40 p-4 text-sm leading-relaxed"><code x-ref="source" class="block whitespace-pre-wrap break-all text-neutral-100">{ command }</code></pre>
+				<button type="button" @click="copy" class={ styles.GenerateSmallButtonClasses() }>
+					<span x-show="idle">Copy command</span>
+					<span x-show="copied" x-cloak>Copied</span>
+				</button>
+			</div>
+		}
+	</div>
+}

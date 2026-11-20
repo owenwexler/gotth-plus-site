@@ -1,0 +1,51 @@
+package view
+
+import (
+	"github.com/owenwexler/gotth-plus-site/internal/csrf"
+	"github.com/owenwexler/gotth-plus-site/internal/styles"
+)
+
+// Layout is the shell of every full page. Fragments never render it.
+templ Layout(title string, description string) {
+	<!DOCTYPE html>
+	<html lang="en">
+		<head>
+			<meta charset="UTF-8"/>
+			<meta name="viewport" content="width=device-width, initial-scale=1"/>
+			<meta name="description" content={ description }/>
+			<title>{ title }</title>
+			<link rel="icon" href="/static/icon/favicon.svg" type="image/svg+xml"/>
+			<meta name="htmx-config" content='{"selfRequestsOnly":true,"allowEval":false,"includeIndicatorStyles":false}'/>
+			<link rel="stylesheet" href="/static/output.css"/>
+			<script src="/static/js/htmx.min.js"></script>
+			<!-- htmx's preload extension: add preload (or preload="mouseover") to links and hx-get elements -->
+			<script defer src="/static/js/htmx-ext-preload.min.js"></script>
+			<script defer src="/static/js/app.js"></script>
+			<script defer src="/static/js/alpine-csp.min.js"></script>
+			<script defer src="/static/js/hx-optimistic.min.js"></script>
+		</head>
+		<body
+			class="min-h-screen bg-black bg-[radial-gradient(circle_at_50%_15%,#333333_0%,#171717_38%,#080808_72%)] text-white antialiased"
+			hx-ext="optimistic, preload"
+			hx-headers={ templ.JSONString(map[string]string{csrf.HeaderName: csrf.Token(ctx)}) }
+		>
+			{ children... }
+			<div id="toasts" aria-live="polite" class="fixed bottom-4 right-4 z-[100] flex flex-col gap-2"></div>
+		</body>
+	</html>
+}
+
+// Header is the top bar of every page. Its links are boosted, so moving between pages swaps the body
+// in place; the GitHub link is outside the boosted nav because it leaves the site.
+templ Header() {
+	<header class="mx-auto flex w-full max-w-6xl flex-wrap items-center justify-between gap-x-6 gap-y-3 px-5 py-6 sm:px-8">
+		<a href="/" class="text-xl font-semibold tracking-tighter focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white">GOTTH<span class="text-neutral-400">+</span></a>
+		<div class="flex items-center gap-1 text-sm">
+			<nav aria-label="Site" hx-boost="true" preload="mouseover" class="flex items-center gap-1">
+				<a href="/docs" class={ styles.GenerateNavLinkClasses(false) }>Docs</a>
+				<a href="/docs/deployment" class={ styles.GenerateNavLinkClasses(false) }>Deploy</a>
+			</nav>
+			<a href="https://github.com/owenwexler/gotth-plus" target="_blank" rel="noopener noreferrer" class={ styles.GenerateNavLinkClasses(false) }>GitHub</a>
+		</div>
+	</header>
+}
