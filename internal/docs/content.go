@@ -41,7 +41,7 @@ var groups = []Group{
 				Summary: "What create-gotth-plus-app asks, what it writes, and every flag it accepts.",
 				Sections: []Section{
 					{Title: "How it works", Blocks: []Block{
-						P("The gotth-plus template is embedded in the create-gotth-plus-app binary, so the generator works offline and each version of the CLI always writes the same project. Database and sign-in choices add or replace files from fixed variants, and the dependency files come from pre-computed go.mod and go.sum sets, so a new project is tidy without network access."),
+						P("The gotth-plus template is embedded in the create-gotth-plus-app binary, so the generator works offline and each version of the CLI always writes the same project. Database, sign-in and cache choices add or replace files from fixed variants, and the dependency files come from pre-computed go.mod and go.sum sets, so a new project is tidy without network access."),
 						P("Every edit to the template text must match exactly once. When the template changes in a way the generator doesn't expect, generation fails and the tests say which edit broke, instead of quietly writing a wrong project."),
 					}},
 					{Title: "Flags", Blocks: []Block{
@@ -54,6 +54,7 @@ var groups = []Group{
 							[]string{"--auth-methods", "password", "With --auth=builtin: any of password, google, github, apple."},
 							[]string{"--db", "sqlite", "sqlite, postgres or mysql. Postgres and MySQL need a server; the tests create a throwaway database on it."},
 							[]string{"--sqlite-driver", "purego", "purego (no C compiler, CGO_ENABLED=0 works) or cgo."},
+							[]string{"--cache", "none", "Server-side cache: none, redis (Redis or Redis-compatible: Valkey, KeyDB, Dragonfly, managed Redis) or memcached (Memcached or Memcached-compatible). See Server-side cache."},
 							[]string{"--e2e", "true", "Playwright browser tests. --e2e=false removes them."},
 							[]string{"--live-reload", "templ", "templ (its proxy) or air. Both reload the browser on port 7331."},
 							[]string{"--docker", "true", "Production Dockerfile (distroless, non-root) and .dockerignore."},
@@ -81,6 +82,7 @@ var groups = []Group{
 cmd/migrate/        schema migrations, run on each deploy
 internal/
   app/              routes (newMux) and middleware chain (buildHandler)
+  cache/            optional server-side cache (Redis or Memcached) and CheckCache
   config/           environment loading and validation
   csrf/             double-submit-cookie CSRF protection
   database/         SQLite connection (GORM) and migrations
@@ -253,6 +255,62 @@ Dockerfile          the production image`),
 					}},
 					{Title: "Counters", Blocks: []Block{
 						P("The vote on each docs page is a single upsert: the database adds one to the counter, so two votes at the same moment both count. Read the counts back in the same request, rather than trusting the number the client already has."),
+					}},
+				},
+			},
+			{
+				Slug:    "caching",
+				Title:   "Server-side cache",
+				Summary: "The optional Redis or Memcached cache, CheckCache, and how to key, invalidate and secure what you cache.",
+				Sections: []Section{
+					{Title: "Choosing a cache", Blocks: []Block{
+						P("A GOTTH+ project can keep the results of slow or frequent database queries in a cache server, so most requests skip the database. Pick one when you create the project:"),
+						Table([]string{"--cache", "Server", "CacheURL"},
+							[]string{"none (default)", "No cache. The project has no internal/cache package and no CacheURL.", ""},
+							[]string{"redis", "Redis, or anything that speaks its protocol: Valkey, KeyDB, Dragonfly, a managed Redis. Uses go-redis.", "redis://localhost:6379/0, or rediss://user:password@host:6380/0 for TLS"},
+							[]string{"memcached", "Memcached, or anything that speaks its text protocol. Uses gomemcache.", "memcached://localhost:11211, or several servers: memcached://host1:11211,host2:11211"},
+						),
+						Code("go run github.com/owenwexler/create-gotth-plus-app@latest my-app --cache=redis"),
+						P("The gotth-plus template itself ships the Redis version. A site that only renders pages from code, like this one, doesn't need a cache at all."),
+					}},
+					{Title: "Turning it on", Blocks: []Block{
+						P("The cache is off until CacheURL is set in .env, so a new project runs, and its tests pass, without a cache server. CacheKeyPrefix is optional: every key becomes <prefix>:<key>, which keeps apps or environments apart on a shared server, and changing it drops everything cached at once."),
+						Code("CacheURL=redis://localhost:6379/0\nCacheKeyPrefix=myapp"),
+						P("main.go connects at startup with cache.Connect and passes the cache to app.NewHandler(env, db, c). Hand it from newMux to the repositories or services that need it. A CacheURL that can't be parsed stops the app at startup; a cache server that doesn't answer is only a warning in the log. With no CacheURL, the cache is cache.Disabled(), which stores nothing."),
+						P("For a local server, install Redis, Valkey or Memcached from your package manager, or run one in Docker: docker run --rm -p 6379:6379 valkey/valkey, or docker run --rm -p 127.0.0.1:11211:11211 memcached."),
+					}},
+					{Title: "CheckCache", Blocks: []Block{
+						P("cache.CheckCache is a read-through helper. It returns the value cached under a key. On a miss it calls your function, usually a repository query, stores the result as JSON for the given time, and returns it."),
+						Code(`cities, err := cache.CheckCache(ctx, c, "cities", 7*24*time.Hour,
+	func(ctx context.Context) ([]model.City, error) { return repo.Cities(ctx) })`),
+						UL(
+							"An error from your function is returned as it is, so errors.Is still works, and it is never cached.",
+							"The cache failing never fails the request. A read error counts as a miss, and a write error is only logged, so with the cache server down every call goes to the database. Short timeouts (500 ms) keep that fallback quick.",
+							"Values go through encoding/json, so cache types with exported fields. An entry that no longer decodes, because the type changed, is fetched again and overwritten.",
+							"The time to live must be positive. Nothing is cached forever.",
+							"Hits and misses are logged at debug level with the key.",
+						),
+					}},
+					{Title: "Keys and invalidation", Blocks: []Block{
+						UL(
+							"Put everything the value depends on in the key: the page, the filter and, above all, the user or owner for per-user data, such as tasks:owner:<id>:page:2. A key without the owner serves one user's data to another.",
+							"Check authorisation before reading the cache, exactly as you would before querying the database.",
+							"When the data changes, delete the keys it affects with c.Delete(ctx, keys...), or keep the time to live short enough that stale data doesn't matter.",
+							"Read through the cache in repositories or services, never in handlers.",
+							"Memcached keys must be at most 250 bytes, prefix included, with no spaces or control characters, and values at most 1 MB by default.",
+						),
+					}},
+					{Title: "Security", Blocks: []Block{
+						UL(
+							"Never expose the cache server to the internet. Anyone who reaches it can read every entry, plant poisoned ones, or flush it all. Keep it on localhost or a private network, behind a firewall.",
+							"Redis: set a password or an ACL user, and use rediss:// (TLS) for anything that isn't on the same host. CacheURL then carries a password, so it belongs in the secret store, and the app never repeats it in an error.",
+							"Memcached: the client has no passwords and no TLS, so the network is the only protection. Keep UDP off on the servers (-U 0).",
+							"Don't cache secrets such as password hashes, session data or tokens, and don't put secrets in keys, which are logged.",
+							"/healthz doesn't check the cache, because the app works without it. Watch the log for cache read failed warnings instead.",
+						),
+					}},
+					{Title: "Testing", Blocks: []Block{
+						P("The cache tests need no server: the Redis client is tested against an in-memory Redis (miniredis), and the Memcached client against a small fake Memcached server in memcached_test.go. Both pass the same contract, testContract in internal/cache/cache_test.go, which covers misses, overwrites, expiry, deletes and CheckCache. Integration tests build the app with cache.Disabled()."),
 					}},
 				},
 			},
