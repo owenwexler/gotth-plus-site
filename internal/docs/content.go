@@ -93,7 +93,7 @@ var groups = []Group{
 						),
 					}},
 					{Title: "Sign-in", Blocks: []Block{
-						P("The default is no sign-in, which suits learning and prototypes. For production the generator recommends a hosted service: Supabase Auth (--auth=supabase, which moves the database to Postgres) or any OpenID Connect provider (--auth=oidc). The built-in option (--auth=builtin) is labelled advanced and experimental, and the generated SECURITY.md says so. Sign-in covers what each option sets up."),
+						P("The default is no sign-in, which suits learning and prototypes. For production the generator recommends a hosted service: Supabase Auth (--auth=supabase, which moves the database to Postgres) or any OpenID Connect provider (--auth=oidc). The built-in option (--auth=builtin) is labelled experimental and only for advanced use, and the generated SECURITY.md says so. Sign-in covers what each option sets up."),
 					}},
 					{Title: "Live reload", Blocks: []Block{
 						P("make dev reloads the browser at http://localhost:7331 after every change, and runs the Tailwind watcher beside the reloader. --live-reload picks the reloader."),
@@ -357,7 +357,7 @@ Dockerfile          with --docker: the production image`),
 							[]string{"none (default)", "Nowhere: no users and no sessions. Every route is public.", "Learning, prototypes and public sites."},
 							[]string{"supabase", "Supabase Auth: email and password, plus any provider you enable in Supabase. The database is Supabase's Postgres, so --db is set to postgres.", "Production apps that want accounts, MFA and recovery handled by a hosted service."},
 							[]string{"oidc", "A hosted OpenID Connect provider: WorkOS, Logto, Kinde, Auth0, Zitadel, Keycloak or any other with discovery.", "Production apps, single sign-on, and teams that already have a provider."},
-							[]string{"builtin", "The app's own database: email and password, Google, GitHub and Apple. Advanced and experimental.", "Teams ready to own password storage, email delivery and provider sign-in themselves."},
+							[]string{"builtin", "The app's own database: email and password, Google, GitHub and Apple. Experimental and only for advanced use.", "Teams ready to own password storage, email delivery and provider sign-in themselves."},
 						),
 						Code("go run github.com/owenwexler/create-gotth-plus-app@latest my-app --auth=supabase\ngo run github.com/owenwexler/create-gotth-plus-app@latest my-app --auth=oidc --oidc-preset=workos\ngo run github.com/owenwexler/create-gotth-plus-app@latest my-app --auth=builtin --auth-methods=password,github"),
 					}},
