@@ -31,7 +31,7 @@ var groups = []Group{
 					}},
 					{Title: "Make your first change", Blocks: []Block{
 						P("The splash page is internal/view/pages.templ. Edit it, save, and the browser reloads. Components live beside it in internal/view, and Tailwind picks up any class you write there, as long as it is a complete literal string."),
-						P("When you're ready for your own data, read Data: SQLite and GORM, and remove the example pieces the README lists under \"Removing the example app\"."),
+						P("When you're ready for your own data, read Data: SQLite, Postgres or MySQL, and remove the example pieces the README lists under \"Removing the example app\"."),
 					}},
 				},
 			},
@@ -79,13 +79,12 @@ var groups = []Group{
 				Sections: []Section{
 					{Title: "Layout", Blocks: []Block{
 						Code(`cmd/server/         entry point: config, database, server start, graceful shutdown
-cmd/migrate/        schema migrations, run on each deploy
 internal/
   app/              routes (newMux) and middleware chain (buildHandler)
   cache/            optional server-side cache (Redis or Memcached) and CheckCache
   config/           environment loading and validation
   csrf/             double-submit-cookie CSRF protection
-  database/         SQLite connection (GORM) and migrations
+  database/         database connection (GORM: SQLite, Postgres or MySQL)
   docs/             this site's documentation content
   dto/              validated request shapes
   factory/          handler constructors (closures over dependencies)
@@ -93,6 +92,7 @@ internal/
   model/            domain types
   repository/       data access behind interfaces
   requestid/        request IDs in headers and logs
+  seed/             the dev-only /seed route: creates the tables and loads sample data
   service/          business rules
   styles/           shared Tailwind class strings
   view/             .templ components and their generated *_templ.go
@@ -233,25 +233,46 @@ Dockerfile          the production image`),
 			},
 			{
 				Slug:    "data",
-				Title:   "Data: SQLite and GORM",
-				Summary: "The database layer, the migrations that create its tables, and the safe patterns for queries.",
+				Title:   "Data: SQLite, Postgres or MySQL",
+				Summary: "Choosing a database, connecting to it, the migrations that create its tables, and the safe patterns for queries.",
 				Sections: []Section{
+					{Title: "Choosing a database", Blocks: []Block{
+						P("Every project talks to its database through GORM, so models, repositories and queries are the same code whichever database you pick. Choose one with --db when you create the project. Only the connection code, the configuration and the test setup change. With Postgres or MySQL, the generator names the database after the project, with each character that isn't a letter, digit or underscore turned into an underscore, and prints the command that creates it."),
+						Table([]string{"--db", "Driver", "Connection", "Good for"},
+							[]string{"sqlite (default)", "glebarez/sqlite, pure Go (or mattn/go-sqlite3 with --sqlite-driver=cgo)", "DatabasePath, a file. Defaults to app.db.", "Learning, prototypes and single-server apps. Nothing else to run."},
+							[]string{"postgres", "gorm.io/driver/postgres, pure Go", "DatabaseURL, required. For example postgres://localhost:5432/my_app?sslmode=disable", "Most production apps, managed cloud databases, and Supabase Auth, which always uses Postgres."},
+							[]string{"mysql", "gorm.io/driver/mysql, pure Go", "DatabaseURL, required, in go-sql-driver/mysql's DSN format. For example root@tcp(localhost:3306)/my_app?parseTime=true&charset=utf8mb4&loc=UTC", "Teams and hosts already running MySQL or a MySQL-compatible server."},
+						),
+						Code("go run github.com/owenwexler/create-gotth-plus-app@latest my-app --db=postgres\ncreatedb my_app    # Postgres: create the database before the first run\n\ngo run github.com/owenwexler/create-gotth-plus-app@latest my-app --db=mysql\nmysql -u root -e 'CREATE DATABASE my_app CHARACTER SET utf8mb4'"),
+					}},
 					{Title: "Connecting", Blocks: []Block{
-						P("The database is SQLite through GORM, using the pure-Go glebarez/sqlite driver, so the build needs no C compiler. DatabasePath sets the file, and it defaults to app.db. In production, put the file on a volume that survives redeploys."),
-						P("This site opens the database in WAL mode with a busy timeout, so a read never blocks a write and a short lock wait is retried instead of failing."),
+						P("SQLite needs no server. DatabasePath sets the file, and the file is created on first use. In production, put it on a volume that survives redeploys and keep it readable only by the app's user. This site uses SQLite, and opens it in WAL mode with a busy timeout, so a read never blocks a write and a short lock wait is retried instead of failing."),
+						P("Postgres and MySQL read DatabaseURL, and the app refuses to start without it. Point it at a local server or a cloud database. internal/database opens a pool of up to 25 connections, well below the server's default connection limit so more than one instance fits, and recycles each connection after 30 minutes, or 5 idle, so failovers and server-side timeouts are picked up."),
+						UL(
+							"Connect over TLS to any server that isn't localhost: sslmode=verify-full on Postgres, tls=true on MySQL.",
+							"Log in as the app's own user with only the privileges it needs, never as a superuser or root.",
+							"MySQL needs parseTime=true in the DSN, because the models use time.Time.",
+							"IDs are stored as a uuid column on Postgres and char(36) on MySQL. SQLite takes the value as it is.",
+						),
 					}},
 					{Title: "Migrations", Blocks: []Block{
-						P("The server never changes the schema. cmd/migrate does, and you run it before each new server starts. database.Migrate lists every model the app stores, so adding a model means adding it there and running the migrator."),
-						Code("make migrate    # brings the schema up to date (the same binary runs in the image)"),
+						P("A new project creates its tables in development. make seed calls the /seed route, which runs GORM's AutoMigrate for the example model and then loads seedData.json. It is safe to run more than once. The route only exists in development: GoEnv=production unregisters it, so nothing changes the schema in production until you decide how it should."),
+						Code("make seed    # development: create the tables, then load seedData.json"),
+						P("Before the first deploy, add an explicit migration step. Run it before each new server starts, never from inside the server, so a schema change happens once and not on every instance. AutoMigrate creates missing tables, columns and indexes, and can change a column's type, but it never drops or renames a column. Review what it will do, or switch to a versioned migration tool such as goose, golang-migrate or Atlas. All three work with SQLite, Postgres and MySQL."),
+						P("This site uses a small cmd/migrate command. database.Migrate lists every model the site stores, and each deploy runs the migrator before starting the server. Copy that pattern if AutoMigrate is enough for your schema."),
+						Code("make migrate    # this site: bring the schema up to date (the same binary runs in the image)"),
 					}},
 					{Title: "Safe queries", Blocks: []Block{
 						UL(
 							"Use bound parameters: Where(\"slug = ?\", slug). Never concatenate user input into SQL.",
 							"Map user-chosen sort columns through an allow-list before they reach Order.",
 							"Map a form into a DTO, validate it, then copy the allowed fields. Never bind a request straight into a model: that lets a client set its own id or timestamps.",
-							"Escape LIKE wildcards with escaper.Like, and cap the length of any search.",
+							"Escape LIKE wildcards with escaper.Like, and cap the length of any search. On SQLite and Postgres, add ESCAPE '\\' to the query. MySQL already uses \\ as its escape character, so MySQL queries need no ESCAPE clause.",
 							"Paginate every list. repository.Paginate clamps the page size to 100.",
 						),
+					}},
+					{Title: "Testing", Blocks: []Block{
+						P("On SQLite, each test opens its own temporary file, so the tests need nothing installed. On Postgres and MySQL, the tests need a running server: internal/database/dbtest creates a fresh database for each test and drops it when the test ends. It uses TestDatabaseURL, or DatabaseURL when that is empty, so that user needs CREATEDB on Postgres, or CREATE and DROP on MySQL. Never point either at a production server."),
 					}},
 					{Title: "Counters", Blocks: []Block{
 						P("The vote on each docs page is a single upsert: the database adds one to the counter, so two votes at the same moment both count. Read the counts back in the same request, rather than trusting the number the client already has."),
@@ -363,7 +384,7 @@ Dockerfile          the production image`),
 					{Title: "Layers", Blocks: []Block{
 						UL(
 							"Unit tests sit next to their packages: services, validators, helpers, the CSRF middleware.",
-							"Integration tests call the real routes and middleware through httptest on a throwaway SQLite file.",
+							"Integration tests call the real routes and middleware through httptest on a throwaway database: a temporary SQLite file, or a fresh database on your Postgres or MySQL server.",
 							"Browser tests (build tag e2e) drive Chromium with Playwright-Go, one browser for the run and a fresh context per test. They check focus rings, the toast region, that no third-party request is made, that nothing scrolls sideways, that the page loads without JavaScript, and an axe accessibility scan when axe-core is available.",
 						),
 					}},
