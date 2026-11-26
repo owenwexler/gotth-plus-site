@@ -17,7 +17,7 @@ make dev      # live reload; open http://localhost:7331
 `make run` starts the server without live reload, on the `Port` in `.env` (3000 by default).
 `make help` lists every target.
 
-Requirements: Go 1.27.3 or newer, templ v0.3.1070 (the version in `go.mod`), the Tailwind CSS v4 standalone CLI
+Requirements: Go 1.27.4 or newer, templ v0.3.1070 (the version in `go.mod`), the Tailwind CSS v4 standalone CLI
 on your `PATH` as `tailwindcss`, `git`, `curl` and `make`.
 
 | Command | What it does |

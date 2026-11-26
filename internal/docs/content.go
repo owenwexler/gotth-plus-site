@@ -13,7 +13,7 @@ var groups = []Group{
 				Sections: []Section{
 					{Title: "What you need", Blocks: []Block{
 						UL(
-							"Go 1.27.3 or newer (the template's go.mod sets the version).",
+							"Go 1.27.4 or newer (the template's go.mod sets the version).",
 							"templ, at the same version as the template's go.mod. Install it with go install github.com/a-h/templ/cmd/templ@<version>.",
 							"The Tailwind CSS v4 standalone CLI on your PATH as tailwindcss. No Node and no npm are needed.",
 							"git, curl and make. Optional: air, for live reload instead of templ's proxy.",
