@@ -8,7 +8,7 @@
 #
 # DEPLOYMENT.md has the full procedure.
 
-FROM golang:1.27.3-trixie AS build
+FROM golang:1.27.4-trixie AS build
 WORKDIR /src
 
 # The Tailwind CSS standalone CLI, pinned and checked against its release checksum.
