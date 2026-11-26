@@ -576,7 +576,7 @@ func Footer() templ.Component {
 			templ_7745c5c3_Var26 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 29, "<footer class=\"border-t border-white/10 px-5 py-8 text-center text-xs tracking-wide text-neutral-400 sm:px-8\"><p>GOTTH+ is open source. <a class=\"underline underline-offset-4 hover:text-white\" href=\"https://github.com/owenwexler/gotth-plus\" target=\"_blank\" rel=\"noopener noreferrer\">GitHub</a> · <a class=\"underline underline-offset-4 hover:text-white\" href=\"/docs\">Docs</a> · <a class=\"underline underline-offset-4 hover:text-white\" href=\"/docs/deployment\">Deployment</a></p></footer>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 29, "<footer class=\"border-t border-white/10 px-5 py-8 text-center text-xs tracking-wide text-neutral-400 sm:px-8\"><p>GOTTH+ is open source. <a class=\"underline underline-offset-4 hover:text-white\" href=\"https://github.com/owenwexler/gotth-plus\" target=\"_blank\" rel=\"noopener noreferrer\">gotth-plus on GitHub</a> · <a class=\"underline underline-offset-4 hover:text-white\" href=\"https://github.com/owenwexler/create-gotth-plus-app\" target=\"_blank\" rel=\"noopener noreferrer\">create-gotth-plus-app on GitHub</a> · <a class=\"underline underline-offset-4 hover:text-white\" href=\"/docs\">Docs</a> · <a class=\"underline underline-offset-4 hover:text-white\" href=\"/docs/deployment\">Deployment</a></p><p class=\"mt-3\">This open-source library is presented as-is with no additional warranty whether express or implied.</p></footer>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -634,7 +634,7 @@ func DocsIndex(groups []docs.Group) templ.Component {
 				var templ_7745c5c3_Var29 string
 				templ_7745c5c3_Var29, templ_7745c5c3_Err = templ.ResolveAttributeValue(g.Title)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/pages.templ`, Line: 155, Col: 51}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/pages.templ`, Line: 158, Col: 51}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var29)
 				if templ_7745c5c3_Err != nil {
@@ -647,7 +647,7 @@ func DocsIndex(groups []docs.Group) templ.Component {
 				var templ_7745c5c3_Var30 string
 				templ_7745c5c3_Var30, templ_7745c5c3_Err = templ.JoinStringErrs(g.Title)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/pages.templ`, Line: 156, Col: 91}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/pages.templ`, Line: 159, Col: 91}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var30))
 				if templ_7745c5c3_Err != nil {
@@ -674,7 +674,7 @@ func DocsIndex(groups []docs.Group) templ.Component {
 					var templ_7745c5c3_Var32 templ.SafeURL
 					templ_7745c5c3_Var32, templ_7745c5c3_Err = templ.JoinURLErrs(templ.URL("/docs/" + d.Slug))
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/pages.templ`, Line: 160, Col: 46}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/pages.templ`, Line: 163, Col: 46}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var32))
 					if templ_7745c5c3_Err != nil {
@@ -700,7 +700,7 @@ func DocsIndex(groups []docs.Group) templ.Component {
 					var templ_7745c5c3_Var34 string
 					templ_7745c5c3_Var34, templ_7745c5c3_Err = templ.JoinStringErrs(d.Title)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/pages.templ`, Line: 161, Col: 67}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/pages.templ`, Line: 164, Col: 67}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var34))
 					if templ_7745c5c3_Err != nil {
@@ -713,7 +713,7 @@ func DocsIndex(groups []docs.Group) templ.Component {
 					var templ_7745c5c3_Var35 string
 					templ_7745c5c3_Var35, templ_7745c5c3_Err = templ.JoinStringErrs(d.Summary)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/pages.templ`, Line: 162, Col: 72}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/pages.templ`, Line: 165, Col: 72}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var35))
 					if templ_7745c5c3_Err != nil {
