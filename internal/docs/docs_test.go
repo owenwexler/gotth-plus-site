@@ -1,6 +1,9 @@
 package docs
 
-import "testing"
+import (
+	"strings"
+	"testing"
+)
 
 func TestCatalogIsWellFormed(t *testing.T) {
 	slugs := map[string]bool{}
@@ -36,6 +39,15 @@ func TestCatalogIsWellFormed(t *testing.T) {
 					case "ul":
 						if len(b.Items) == 0 {
 							t.Errorf("%s/%s: empty list", d.Slug, s.Title)
+						}
+					case "links":
+						if len(b.Links) == 0 {
+							t.Errorf("%s/%s: empty links list", d.Slug, s.Title)
+						}
+						for _, l := range b.Links {
+							if l.Label == "" || !strings.HasPrefix(l.URL, "https://") {
+								t.Errorf("%s/%s: link %q needs a label and an https:// URL", d.Slug, s.Title, l.URL)
+							}
 						}
 					case "table":
 						for _, row := range b.Rows {

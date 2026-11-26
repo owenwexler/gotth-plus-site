@@ -4,13 +4,22 @@ package docs
 
 import "strings"
 
-// Block is one piece of a section. Kind is "p" (Text), "code" (Text), "ul" (Items) or "table" (Head, Rows).
+// Block is one piece of a section. Kind is "p" (Text), "code" (Text), "ul" (Items), "table" (Head, Rows)
+// or "links" (Links).
 type Block struct {
 	Kind  string
 	Text  string
 	Items []string
 	Head  []string
 	Rows  [][]string
+	Links []Link
+}
+
+// Link is an external link with a short note on what is there. URL must be an https:// address.
+type Link struct {
+	Label string
+	URL   string
+	Note  string
 }
 
 // P is a paragraph.
@@ -21,6 +30,9 @@ func Code(text string) Block { return Block{Kind: "code", Text: text} }
 
 // UL is a bulleted list.
 func UL(items ...string) Block { return Block{Kind: "ul", Items: items} }
+
+// Links is a bulleted list of external links.
+func Links(links ...Link) Block { return Block{Kind: "links", Links: links} }
 
 // Table is a table with a header row.
 func Table(head []string, rows ...[]string) Block {

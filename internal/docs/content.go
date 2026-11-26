@@ -33,6 +33,31 @@ var groups = []Group{
 						P("The splash page is internal/view/pages.templ. Edit it, save, and the browser reloads. Components live beside it in internal/view, and Tailwind picks up any class you write there, as long as it is a complete literal string."),
 						P("When you're ready for your own data, read Data: SQLite, Postgres or MySQL, and remove the example pieces the README lists under \"Removing the example app\"."),
 					}},
+					{Title: "Official sites and documentation", Blocks: []Block{
+						P("These docs cover how GOTTH+ uses each part of the stack. For everything else, go to the source:"),
+						Links(
+							Link{"Go", "https://go.dev/", "the language, downloads and the standard library"},
+							Link{"Go documentation", "https://go.dev/doc/", "the tour, Effective Go, the language spec and tutorials"},
+							Link{"templ", "https://templ.guide/", "the templ guide: syntax, components and the CLI"},
+							Link{"htmx", "https://htmx.org/", "the htmx home page, essays and examples"},
+							Link{"htmx documentation", "https://htmx.org/docs/", "attributes, events, configuration and the reference"},
+							Link{"htmx preload extension", "https://htmx.org/extensions/preload/", "preloading links and fragments on mousedown or hover"},
+							Link{"hx-optimistic", "https://github.com/lorenseanstewart/hx-optimistic", "the optimistic-update extension: its README documents the data-optimistic config"},
+							Link{"Alpine.js", "https://alpinejs.dev/", "directives, magics and the global store"},
+							Link{"Alpine.js CSP build", "https://alpinejs.dev/advanced/csp", "the build GOTTH+ uses, and what it can't evaluate"},
+							Link{"Tailwind CSS", "https://tailwindcss.com/", "the Tailwind home page and the full class reference"},
+							Link{"Tailwind CSS standalone CLI", "https://tailwindcss.com/blog/standalone-cli", "the single binary GOTTH+ uses instead of Node and npm"},
+							Link{"Tailwind CSS: styling with utility classes", "https://tailwindcss.com/docs/styling-with-utility-classes", "the core concepts: utilities, variants such as hover: and data-*, and theme values"},
+							Link{"GORM", "https://gorm.io/", "the Go ORM GOTTH+ uses for every database"},
+							Link{"GORM documentation", "https://gorm.io/docs/", "models, queries, associations, migrations and the database drivers"},
+							Link{"SQLite", "https://www.sqlite.org/", "the default database: a single file, no server"},
+							Link{"SQLite documentation", "https://www.sqlite.org/docs.html", "SQL syntax, pragmas such as WAL mode, and limits"},
+							Link{"PostgreSQL", "https://www.postgresql.org/", "the Postgres project, downloads and news"},
+							Link{"PostgreSQL documentation", "https://www.postgresql.org/docs/", "the manual for every supported version"},
+							Link{"MySQL", "https://www.mysql.com/", "the MySQL home page and downloads"},
+							Link{"MySQL documentation", "https://dev.mysql.com/doc/", "the reference manual and connector guides"},
+						),
+					}},
 				},
 			},
 			{
@@ -49,7 +74,7 @@ var groups = []Group{
 							[]string{"[name]", "asked", "Project directory. . writes into the current directory."},
 							[]string{"--module", "github.com/<user>/<name>", "Go module path."},
 							[]string{"--port", "3000", "Development port, written to .env."},
-							[]string{"--auth", "none", "none, supabase, oidc or builtin (advanced, experimental). All but none use the app's own server-side sessions."},
+							[]string{"--auth", "none", "none, supabase, oidc or builtin (advanced, experimental). All but none use the app's own server-side sessions. See Sign-in."},
 							[]string{"--oidc-preset", "other", "With --auth=oidc: workos, logto, kinde, auth0, zitadel, keycloak or other."},
 							[]string{"--auth-methods", "password", "With --auth=builtin: any of password, google, github, apple."},
 							[]string{"--db", "sqlite", "sqlite, postgres or mysql. Postgres and MySQL need a server; the tests create a throwaway database on it."},
@@ -68,7 +93,34 @@ var groups = []Group{
 						),
 					}},
 					{Title: "Sign-in", Blocks: []Block{
-						P("The default is no sign-in, which suits learning and prototypes. For production the generator recommends a hosted service: Supabase Auth (--auth=supabase, which moves the database to Postgres) or any OpenID Connect provider (--auth=oidc). The built-in option (--auth=builtin) is labelled advanced and experimental, and the generated SECURITY.md says so. This site uses no sign-in."),
+						P("The default is no sign-in, which suits learning and prototypes. For production the generator recommends a hosted service: Supabase Auth (--auth=supabase, which moves the database to Postgres) or any OpenID Connect provider (--auth=oidc). The built-in option (--auth=builtin) is labelled advanced and experimental, and the generated SECURITY.md says so. Sign-in covers what each option sets up."),
+					}},
+					{Title: "Live reload", Blocks: []Block{
+						P("make dev reloads the browser at http://localhost:7331 after every change, and runs the Tailwind watcher beside the reloader. --live-reload picks the reloader."),
+						UL(
+							"templ (the default): templ's own watcher regenerates the views, rebuilds and restarts the server, and its proxy reloads the browser. Nothing else to install.",
+							"air: air rebuilds on every .go or .templ change, running templ generate first so the build never uses stale generated files, and its proxy reloads the browser on the same port. Install it with go install github.com/air-verse/air@latest. Its settings are in air.toml.",
+						),
+					}},
+					{Title: "Browser tests", Blocks: []Block{
+						P("--e2e (on by default) keeps the Playwright-Go browser tests, and make setup downloads the Chromium they drive. Besides the example app, they check things any app needs: visible focus rings, accessible toasts, no third-party requests, no sideways scrolling on a phone, and pages that load without JavaScript."),
+						P("--axe (on by default with --e2e) downloads axe-core from the npm registry, checked against its sha512 hash, for an accessibility scan. Without it, that scan is skipped."),
+						P("--e2e=false removes the browser tests, their make targets and the Chromium download, so make test needs no browser. Nothing then catches a CDN script or font sneaking past the Content-Security-Policy, so the README suggests adding the generic checks back from the gotth-plus repository before production."),
+					}},
+					{Title: "JavaScript libraries", Blocks: []Block{
+						P("htmx, its preload extension, Alpine's CSP build and hx-optimistic are plain files in static/js, downloaded by make js. --js (on by default) downloads them during setup, records each version and SHA-384 hash in the README, and commits them, so production serves copies you have pinned and reviewed."),
+						P("With --js=false, the files are git-ignored and downloaded later with make js. Commit them before you deploy: the Dockerfile refuses to build without them, and a production build must never download them, because make js fetches the latest versions."),
+					}},
+					{Title: "Docker and CI", Blocks: []Block{
+						P("--docker (on by default) adds a Dockerfile, a .dockerignore and make docker. The image builds the CSS with a pinned, checksum-verified Tailwind CLI and builds the server, then copies both into a distroless image that runs as a non-root user with GoEnv=production on port 8080. On SQLite, the database file lives on a volume at /data. On Postgres and MySQL, pass DatabaseURL at runtime from the platform's secret store: it is never baked into the image. The CGO SQLite driver needs glibc, so that one choice uses a slightly larger distroless base."),
+						P("--ci (on by default) adds a GitHub Actions workflow, with actions pinned by commit. It runs go mod verify, checks that templ generate, templ fmt and gofmt change nothing, then runs make vet, make test and make vuln. On Postgres or MySQL it starts a database server for the tests. With --docker, it also checks that the production image builds."),
+					}},
+					{Title: "Git and setup", Blocks: []Block{
+						UL(
+							"--git (on by default) runs git init and makes a first commit, so the project starts from a clean, committed state.",
+							"--setup (on by default) runs make setup: the Go modules, the JavaScript libraries, Chromium for the browser tests, and a first build. With --setup=false, run make setup yourself.",
+							"--yes asks nothing: flags first, then defaults. With --yes, the project name is required.",
+						),
 					}},
 				},
 			},
@@ -78,19 +130,24 @@ var groups = []Group{
 				Summary: "Where each part of a GOTTH+ project lives, and what it is for.",
 				Sections: []Section{
 					{Title: "Layout", Blocks: []Block{
-						Code(`cmd/server/         entry point: config, database, server start, graceful shutdown
+						Code(`cmd/server/         entry point: config, database, cache, server start, graceful shutdown
 internal/
-  app/              routes (newMux) and middleware chain (buildHandler)
-  cache/            optional server-side cache (Redis or Memcached) and CheckCache
+  app/              routes (newMux) and middleware chain (buildHandler), shared by main and the tests
+  auth/             with sign-in: sessions, the signed-in user, providers, per-account limits
+  cache/            with --cache: the Redis or Memcached cache and CheckCache
   config/           environment loading and validation
   csrf/             double-submit-cookie CSRF protection
   database/         database connection (GORM: SQLite, Postgres or MySQL)
-  docs/             this site's documentation content
   dto/              validated request shapes
+  escaper/          SQL LIKE wildcard escaping
   factory/          handler constructors (closures over dependencies)
-  middleware/       security headers, rate limit, compression, body limit, trusted proxies
+  handler/          struct-based handlers (the health check)
+  helper/           generic helpers
+  mail/             with password sign-in: emails, by SMTP in production and to the log in development
+  middleware/       security headers, rate limit, compression, body limit, admin key
   model/            domain types
-  repository/       data access behind interfaces
+  optimistic/       hx-optimistic config builders
+  repository/       data access behind interfaces, sentinel errors, pagination
   requestid/        request IDs in headers and logs
   seed/             the dev-only /seed route: creates the tables and loads sample data
   service/          business rules
@@ -100,9 +157,12 @@ static/
   input.css         Tailwind entry point
   js/app.js         Alpine components and htmx hooks
   js/*.min.js       htmx, its preload extension, Alpine (CSP) and hx-optimistic
-  icon/  font/      your icons and fonts
+  font/  icon/      your self-hosted fonts and icons
+download-js.sh      downloads the JavaScript libraries (make js)
+seed.sh             runs POST /seed with a CSRF token (make seed)
+seedData.json       sample data
 Makefile            every command, run make help
-Dockerfile          the production image`),
+Dockerfile          with --docker: the production image`),
 					}},
 					{Title: "Where to start", Blocks: []Block{
 						UL(
@@ -127,7 +187,6 @@ Dockerfile          the production image`),
 					{Title: "Middleware order", Blocks: []Block{
 						P("buildHandler in internal/app/app.go wraps the router. Outermost runs first, so cheap rejections happen before any handler work:"),
 						UL(
-							"Trusted proxies (only when TrustedProxies is set): replaces the client address when the peer is your proxy.",
 							"Request ID: reads or creates X-Request-ID and puts it on every log line.",
 							"Security headers: Content-Security-Policy, nosniff, Referrer-Policy, Permissions-Policy, Cross-Origin-Opener-Policy, and HSTS in production.",
 							"Compression: gzip and Brotli.",
@@ -135,6 +194,7 @@ Dockerfile          the production image`),
 							"Cross-origin protection: Go's http.CrossOriginProtection, using Sec-Fetch-Site and Origin.",
 							"Body limit: 1 MiB on every request.",
 							"CSRF: issues the token cookie and checks the header on every non-safe method.",
+							"With sign-in: the session and the signed-in user (auth.Middleware), skipped for /static/.",
 						),
 					}},
 					{Title: "Layers", Blocks: []Block{
@@ -172,12 +232,12 @@ Dockerfile          the production image`),
 				Summary: "The htmx version, its extensions, and the error handling this template commits to.",
 				Sections: []Section{
 					{Title: "Versions", Blocks: []Block{
-						P("The template self-hosts four pinned libraries in static/js. Production serves those committed copies and never downloads anything at build time."),
-						Table([]string{"File", "Library", "Version"},
-							[]string{"htmx.min.js", "htmx", "2.0.11"},
-							[]string{"htmx-ext-preload.min.js", "htmx preload extension", "2.1.2"},
-							[]string{"alpine-csp.min.js", "Alpine.js (CSP build)", "3.17.5"},
-							[]string{"hx-optimistic.min.js", "hx-optimistic", "1.0.12"},
+						P("A project self-hosts four libraries in static/js. make js downloads the latest release of each, and htmx stays on its 2.x line. Pin a version with the variable beside it, for example HTMX_VERSION=2.0.11 make js. Production serves the committed copies and never downloads anything at build time."),
+						Table([]string{"File", "Library", "Pin with"},
+							[]string{"htmx.min.js", "htmx", "HTMX_VERSION"},
+							[]string{"htmx-ext-preload.min.js", "htmx preload extension", "PRELOAD_VERSION"},
+							[]string{"alpine-csp.min.js", "Alpine.js (CSP build)", "ALPINE_VERSION"},
+							[]string{"hx-optimistic.min.js", "hx-optimistic", "HX_OPTIMISTIC_VERSION"},
 						),
 						P("download-js.sh prints each file's SHA-384 hash. Compare it with the upstream release when you upgrade, and record it in the README."),
 					}},
@@ -188,8 +248,14 @@ Dockerfile          the production image`),
 						P("htmx ignores 4xx and 5xx responses by default, so a failure would be silent. app.js changes that: a response with an HX-Reswap header is swapped as the server asked, and network failures or unlabelled errors show a generic toast. Check xhr.status before you reset a form or close a dialog on success."),
 					}},
 					{Title: "Preloading and boosting", Blocks: []Block{
-						P("Add preload to a link or an hx-get element to fetch it on mousedown, or preload=\"mouseover\" to fetch it after a short hover. A preload is a real request, so only use it for cheap GETs that change nothing. This site's navigation uses hx-boost with preload=\"mouseover\"."),
+						P("Add preload to a link or an hx-get element to fetch it on mousedown, or preload=\"mouseover\" to fetch it after a short hover. A preload is a real request, sent with an HX-Preloaded: true header, so only use it for cheap GETs that change nothing. The extension is loaded on every page, but a new project doesn't use it anywhere yet. Good places are navigation, tabs and pagination."),
 						Code("<nav hx-boost=\"true\" preload=\"mouseover\">\n  <a href=\"/docs/cli\">The project generator</a>\n</nav>"),
+					}},
+					{Title: "Optimistic updates", Blocks: []Block{
+						P("hx-optimistic makes the page change the moment someone clicks, before the server answers, and undoes the change if the request fails. A toggle such as a done checkbox or a like button feels instant even on a slow connection, while the server stays the source of truth: its response still replaces the target when it arrives. The extension is loaded on every page, and an element opts in with a data-optimistic attribute that holds a JSON config saying what to change on its hx-target."),
+						P("For toggles, optimistic.OptimisticFlip builds that config. The target carries its state as a data attribute, and flipping that attribute is the whole optimistic update, so style the target from it with Tailwind's data-[done=true]: variants. If the request fails on the network, the extension rolls the change back. If the server answers with an error toast, app.js restores the old value instead, because htmx then treats the response as a swap rather than an error, and the extension's own rollback never runs. A native checkbox flips itself on click, so app.js also sets a checkbox inside the target back from its data-done attribute. Use done as the key for checkbox toggles, or extend that line in app.js."),
+						Code("<li id=\"task-1\" data-done=\"false\" class=\"data-[done=true]:line-through\">\n  <input type=\"checkbox\" hx-post=\"/tasks/1/toggle\" hx-target=\"#task-1\" hx-swap=\"outerHTML\"\n         data-optimistic={ optimistic.OptimisticFlip(\"done\", false) }/>\n  Write the docs\n</li>"),
+						P("Only use it where the server almost always agrees, and where a brief flicker back on failure is acceptable. Never use it for anything the user must not see succeed before it really has, such as a payment."),
 					}},
 				},
 			},
@@ -219,14 +285,14 @@ Dockerfile          the production image`),
 					{Title: "Building the CSS", Blocks: []Block{
 						P("There is no Node and no bundler. The Tailwind v4 standalone CLI builds static/output.css from static/input.css. make css builds it once, and make dev keeps it watching."),
 						Code("make css        # minified static/output.css\nmake dev-css    # watch mode (also run by make dev)"),
-						P("The CSS is built in the Docker image as well, so the committed output.css is not used in production builds."),
+						P("The production image (--docker) builds the CSS itself, with a pinned, checksum-verified Tailwind CLI, so a stale local output.css never reaches production."),
 					}},
 					{Title: "Finding classes", Blocks: []Block{
 						P("Tailwind only generates classes it can find as complete literal strings. input.css lists the view and styles directories as sources, so a class written in a .templ file or in internal/styles is included. Never build a class by concatenation such as \"bg-\" + color."),
 						P("Repeated class lists belong in internal/styles as functions, which keeps a component's markup short and the class strings in one place."),
 					}},
 					{Title: "Fonts and focus", Blocks: []Block{
-						P("To self-host a font, put the .woff2 file in static/font, declare the @font-face in input.css and register it in @theme. Preload it in the layout. The site uses no third-party font CDN, which keeps requests private and fast."),
+						P("To self-host a font, put the .woff2 file in static/font, declare the @font-face in input.css and register it in @theme. Preload it in the layout. Don't use a third-party font CDN: the Content-Security-Policy only allows fonts from the app itself, and self-hosting keeps requests private and fast."),
 						P("Keep a visible focus ring. Use the focus-visible: classes alone: adding focus:outline-none beside a focus-visible:outline-* ring hides the ring in Tailwind v4."),
 					}},
 				},
@@ -246,7 +312,8 @@ Dockerfile          the production image`),
 						Code("go run github.com/owenwexler/create-gotth-plus-app@latest my-app --db=postgres\ncreatedb my_app    # Postgres: create the database before the first run\n\ngo run github.com/owenwexler/create-gotth-plus-app@latest my-app --db=mysql\nmysql -u root -e 'CREATE DATABASE my_app CHARACTER SET utf8mb4'"),
 					}},
 					{Title: "Connecting", Blocks: []Block{
-						P("SQLite needs no server. DatabasePath sets the file, and the file is created on first use. In production, put it on a volume that survives redeploys and keep it readable only by the app's user. This site uses SQLite, and opens it in WAL mode with a busy timeout, so a read never blocks a write and a short lock wait is retried instead of failing."),
+						P("SQLite needs no server. DatabasePath sets the file, and the file is created on first use. In production, put it on a volume that survives redeploys and keep it readable only by the app's user. A new project opens SQLite with GORM's defaults. If reads and writes start waiting on each other, turn on WAL mode and a busy timeout, so a read never blocks a write and a short lock wait is retried instead of failing. With the pure-Go driver, add them to the path in ConnectDb:"),
+						Code("dsn := fmt.Sprintf(\"file:%s?_pragma=journal_mode(WAL)&_pragma=busy_timeout(5000)&_pragma=foreign_keys(ON)\", path)"),
 						P("Postgres and MySQL read DatabaseURL, and the app refuses to start without it. Point it at a local server or a cloud database. internal/database opens a pool of up to 25 connections, well below the server's default connection limit so more than one instance fits, and recycles each connection after 30 minutes, or 5 idle, so failovers and server-side timeouts are picked up."),
 						UL(
 							"Connect over TLS to any server that isn't localhost: sslmode=verify-full on Postgres, tls=true on MySQL.",
@@ -259,8 +326,7 @@ Dockerfile          the production image`),
 						P("A new project creates its tables in development. make seed calls the /seed route, which runs GORM's AutoMigrate for the example model and then loads seedData.json. It is safe to run more than once. The route only exists in development: GoEnv=production unregisters it, so nothing changes the schema in production until you decide how it should."),
 						Code("make seed    # development: create the tables, then load seedData.json"),
 						P("Before the first deploy, add an explicit migration step. Run it before each new server starts, never from inside the server, so a schema change happens once and not on every instance. AutoMigrate creates missing tables, columns and indexes, and can change a column's type, but it never drops or renames a column. Review what it will do, or switch to a versioned migration tool such as goose, golang-migrate or Atlas. All three work with SQLite, Postgres and MySQL."),
-						P("This site uses a small cmd/migrate command. database.Migrate lists every model the site stores, and each deploy runs the migrator before starting the server. Copy that pattern if AutoMigrate is enough for your schema."),
-						Code("make migrate    # this site: bring the schema up to date (the same binary runs in the image)"),
+						P("If AutoMigrate is enough for your schema, a small command is all it takes: a cmd/migrate whose main connects with database.ConnectDb and calls AutoMigrate with every model the app stores, built into the image beside the server and run by each deploy before the new server starts. With sign-in, model.All() already lists every model."),
 					}},
 					{Title: "Safe queries", Blocks: []Block{
 						UL(
@@ -274,8 +340,97 @@ Dockerfile          the production image`),
 					{Title: "Testing", Blocks: []Block{
 						P("On SQLite, each test opens its own temporary file, so the tests need nothing installed. On Postgres and MySQL, the tests need a running server: internal/database/dbtest creates a fresh database for each test and drops it when the test ends. It uses TestDatabaseURL, or DatabaseURL when that is empty, so that user needs CREATEDB on Postgres, or CREATE and DROP on MySQL. Never point either at a production server."),
 					}},
-					{Title: "Counters", Blocks: []Block{
-						P("The vote on each docs page is a single upsert: the database adds one to the counter, so two votes at the same moment both count. Read the counts back in the same request, rather than trusting the number the client already has."),
+					{Title: "Concurrent updates", Blocks: []Block{
+						P("Let the database do the arithmetic. Reading a value, changing it in Go and writing it back loses one of two updates that arrive at the same moment. Use a single UPDATE with gorm.Expr, or an upsert with clause.OnConflict, which all three databases support, then read the result back in the same request rather than trusting the number the client already has."),
+						Code("db.Model(&model.Post{}).Where(\"id = ?\", id).Update(\"likes\", gorm.Expr(\"likes + ?\", 1))"),
+					}},
+				},
+			},
+			{
+				Slug:    "auth",
+				Title:   "Sign-in",
+				Summary: "The four sign-in options, what they set up, and the settings each one needs.",
+				Sections: []Section{
+					{Title: "Choosing a sign-in option", Blocks: []Block{
+						P("Pick one with --auth when you create the project. Every option except none adds the same server-side sessions, and only the code for the methods you choose is written into the project."),
+						Table([]string{"--auth", "Where users live", "Good for"},
+							[]string{"none (default)", "Nowhere: no users and no sessions. Every route is public.", "Learning, prototypes and public sites."},
+							[]string{"supabase", "Supabase Auth: email and password, plus any provider you enable in Supabase. The database is Supabase's Postgres, so --db is set to postgres.", "Production apps that want accounts, MFA and recovery handled by a hosted service."},
+							[]string{"oidc", "A hosted OpenID Connect provider: WorkOS, Logto, Kinde, Auth0, Zitadel, Keycloak or any other with discovery.", "Production apps, single sign-on, and teams that already have a provider."},
+							[]string{"builtin", "The app's own database: email and password, Google, GitHub and Apple. Advanced and experimental.", "Teams ready to own password storage, email delivery and provider sign-in themselves."},
+						),
+						Code("go run github.com/owenwexler/create-gotth-plus-app@latest my-app --auth=supabase\ngo run github.com/owenwexler/create-gotth-plus-app@latest my-app --auth=oidc --oidc-preset=workos\ngo run github.com/owenwexler/create-gotth-plus-app@latest my-app --auth=builtin --auth-methods=password,github"),
+					}},
+					{Title: "What every option sets up", Blocks: []Block{
+						UL(
+							"Server-side sessions (alexedwards/scs) in a sessions table, so they can be revoked. The cookie is __Host-session in production: HttpOnly, Secure and SameSite=Lax, lasting 7 days at most and 24 hours idle.",
+							"Every sign-in issues a new session token and a new CSRF token (csrf.Rotate), so a token planted or seen earlier stops working.",
+							"auth.CurrentUser(ctx) is the signed-in user. Wrap routes that need one in auth.RequireUser, and authorise every object by fetching it with both its id and its owner's id.",
+							"Sign out, and Sign out everywhere, which raises User.SessionVersion and so ends every session the user has.",
+							"?next= after sign-in only accepts paths on the same site (auth.SafeNext), so it can't send anyone elsewhere.",
+							"Routes: GET /login, GET /account, POST /logout and POST /logout-everywhere, plus the routes of the chosen methods.",
+							"BaseURL, the app's public address. Emailed links and the providers' redirect URLs are built from it, never from the request's Host header, which the client controls. It must be https in production, and defaults to http://localhost:7331 in development.",
+						),
+						P("In development, a method whose keys are empty is left off the sign-in page, so the project runs before you register anything. In production, the app refuses to start without them."),
+					}},
+					{Title: "Supabase Auth", Blocks: []Block{
+						Table([]string{"Setting", "What it is"},
+							[]string{"SupabaseURL", "The project URL, from Project Settings > API."},
+							[]string{"SupabasePublishableKey", "The publishable (anon) key. Never the secret or service_role key: it bypasses Supabase's row-level security."},
+							[]string{"SupabaseProviders", "Optional. The providers enabled in Supabase that get a Continue with button, such as google,github. Empty means email and password only."},
+							[]string{"DatabaseURL", "The project's Postgres, from Connect > Session pooler, with sslmode=require."},
+						),
+						P("In Supabase, under Authentication > URL Configuration, set the Site URL to BaseURL and allow <BaseURL>/auth/supabase/callback and <BaseURL>/reset-password as redirect URLs."),
+						UL(
+							"Users and passwords live in Supabase. The app keeps its own users row, linked by Supabase's user ID, and its own session. Supabase's tokens are checked with Supabase, used once and never stored.",
+							"Every flow, including provider sign-in and the confirmation and reset links, uses PKCE. The verifier stays in this browser's __Host-supabase-flow cookie, so a reset link only works in the browser that asked for it.",
+							"Passwords are 15 to 72 characters. Set Supabase's own minimum no higher.",
+							"A user banned or deleted in Supabase stays signed in to the app until their session ends, or until you raise their SessionVersion.",
+						),
+					}},
+					{Title: "OpenID Connect", Blocks: []Block{
+						P("--oidc-preset fills .env.example with the right hints for a known provider. The app reads everything else from the issuer's discovery document."),
+						Table([]string{"--oidc-preset", "Create the client as", "Issuer looks like"},
+							[]string{"workos", "An OAuth application under Connect", "https://<your-subdomain>.authkit.app"},
+							[]string{"logto", "A Traditional web application", "https://<tenant-id>.logto.app/oidc"},
+							[]string{"kinde", "A back-end web application", "https://<your-business>.kinde.com"},
+							[]string{"auth0", "A Regular Web Application", "https://<tenant>.<region>.auth0.com/"},
+							[]string{"zitadel", "A web application with code flow", "https://<instance>.zitadel.cloud"},
+							[]string{"keycloak", "A confidential OpenID Connect client in the realm", "https://<host>/realms/<realm>"},
+							[]string{"other (default)", "Any provider with /.well-known/openid-configuration", "https://issuer.example.com"},
+						),
+						P("Set OIDCIssuerURL, OIDCClientID and OIDCClientSecret, and optionally OIDCLabel, the button's text after Continue with. At the provider, allow <BaseURL>/auth/oidc/callback as the redirect URI and <BaseURL>/ as the post-logout redirect URI."),
+						UL(
+							"Sign-in checks a random state, uses PKCE, and checks the ID token's signature, audience, expiry, nonce and issuer, which must be exactly OIDCIssuerURL.",
+							"The provider must send email_verified. Accounts are only made for verified emails, and users are matched by the provider's subject, never by email alone.",
+							"Signing out also ends the session at the provider when its discovery document has an end_session_endpoint. Some providers, such as WorkOS, don't have one.",
+						),
+					}},
+					{Title: "Built-in sign-in", Blocks: []Block{
+						P("Built-in sign-in follows current guidance (OWASP, NIST SP 800-63B-4) and is covered by tests, but it hasn't been independently audited, and keeping passwords, sessions and provider sign-in safe becomes your job. A hosted service also takes care of MFA, breach protection and account recovery. Choose the methods with --auth-methods: any of password, google, github and apple."),
+						Table([]string{"Method", "Settings", "Notes"},
+							[]string{"password", "SMTPHost, SMTPPort (587), SMTPUsername, SMTPPassword, MailFrom", "Confirmation and reset emails. In development, with SMTPHost empty, emails and their links go to the server log."},
+							[]string{"google", "GoogleClientID, GoogleClientSecret", "An OAuth client in the Google Cloud console."},
+							[]string{"github", "GitHubClientID, GitHubClientSecret", "An OAuth app in GitHub's developer settings."},
+							[]string{"apple", "AppleClientID, AppleTeamID, AppleKeyID, ApplePrivateKeyFile", "A Services ID and a .p8 key. Apple only allows https redirect URLs, so trying it locally needs an https tunnel."},
+						),
+						P("Each provider's redirect URL is <BaseURL>/auth/<provider>/callback."),
+						UL(
+							"Passwords are hashed with argon2id, 15 to 256 characters, with no rules about kinds of characters. An unknown email costs the same time as a wrong password, and sign-in, sign-up and reset answer the same whether or not an account exists.",
+							"Emailed links carry single-use, expiring tokens stored only as SHA-256. They open a page that changes nothing until its button posts.",
+							"Sign-in, sign-up and reset emails are rate-limited per email address as well as per client address.",
+							"Provider sign-in checks a random state, uses PKCE where the provider supports it (Apple doesn't), and checks the ID token's nonce for Google and Apple. An email links to an existing account only when the provider has verified it and the account's email is confirmed too, so nobody can take over an account by signing in elsewhere with someone else's address.",
+							"Apple comes back with a cross-site POST, so POST /auth/apple/callback alone skips the CSRF and cross-origin checks. Its state and nonce protect it. Keep the .p8 file out of the repository and the image.",
+							"make seed also creates dev@example.com, confirmed, with the password in SeedUserPassword, which the generator fills with a random value in .env.",
+						),
+					}},
+					{Title: "Known limits", Blocks: []Block{
+						UL(
+							"There is no second factor (TOTP or passkeys) yet.",
+							"Authorisation is yours: auth.RequireUser only checks that someone is signed in.",
+							"The CSRF token is replaced at sign-in and sign-out but not bound to the session.",
+							"Password sign-in, built-in or Supabase, needs JavaScript: the forms rely on htmx sending the CSRF header.",
+						),
 					}},
 				},
 			},
@@ -292,7 +447,7 @@ Dockerfile          the production image`),
 							[]string{"memcached", "Memcached, or anything that speaks its text protocol. Uses gomemcache.", "memcached://localhost:11211, or several servers: memcached://host1:11211,host2:11211"},
 						),
 						Code("go run github.com/owenwexler/create-gotth-plus-app@latest my-app --cache=redis"),
-						P("The gotth-plus template itself ships the Redis version. A site that only renders pages from code, like this one, doesn't need a cache at all."),
+						P("The gotth-plus template itself ships the Redis version. A project whose pages read little from the database doesn't need a cache at all."),
 					}},
 					{Title: "Turning it on", Blocks: []Block{
 						P("The cache is off until CacheURL is set in .env, so a new project runs, and its tests pass, without a cache server. CacheKeyPrefix is optional: every key becomes <prefix>:<key>, which keeps apps or environments apart on a shared server, and changing it drops everything cached at once."),
@@ -359,15 +514,18 @@ Dockerfile          the production image`),
 						),
 					}},
 					{Title: "Behind a proxy", Blocks: []Block{
-						P("The rate limiter counts per TCP peer address, and it ignores X-Forwarded-For, because a client can forge that header. Behind a reverse proxy every visitor would then share the proxy's one bucket."),
-						P("Set TrustedProxies to the proxy's address or network, in CIDR form. The server then takes the client address from X-Forwarded-For, but only when the request really comes from that proxy, and it uses the right-most entry the proxy appended, never the left-most one the client sent."),
-						Code("TrustedProxies=127.0.0.1/32"),
+						P("The rate limiter counts per TCP peer address, and it ignores X-Forwarded-For, because a client can forge that header. Behind a reverse proxy or load balancer every visitor would then share the proxy's one bucket, and one busy user could lock everyone out. Choose one fix:"),
+						UL(
+							"Rate-limit at the proxy (nginx limit_req, Caddy, your CDN or load balancer), and loosen or remove the in-app limits.",
+							"Or trust the forwarded address only from your proxy: add middleware in front of the rate limiter that replaces r.RemoteAddr with the client address from X-Forwarded-For, only when the request really comes from your proxy. Take the right-most address your proxy appended, never the left-most one the client sent.",
+						),
 					}},
 					{Title: "Known limits", Blocks: []Block{
 						UL(
-							"There is no sign-in. Every route is public, and nothing is tied to a user.",
-							"Rate limits live in memory, per process. Several instances each keep their own counters.",
-							"Votes are not deduplicated by visitor. The rate limit slows repeated voting, but it does not stop it.",
+							"Without --auth there is no sign-in. Every route is public, and nothing is tied to a user. With sign-in, authorisation is still yours: auth.RequireUser only checks that someone is signed in.",
+							"There is no second factor (TOTP or passkeys) yet.",
+							"The CSRF token is a double-submit cookie. With sign-in it is replaced at sign-in and sign-out, but it is not bound to the session.",
+							"Rate limits live in memory, per process. Several instances each keep their own counters, so use the proxy or a shared store for a global limit.",
 							"The app does not terminate TLS. Put a TLS-terminating proxy or platform in front of it.",
 						),
 					}},
@@ -387,25 +545,37 @@ Dockerfile          the production image`),
 							"Integration tests call the real routes and middleware through httptest on a throwaway database: a temporary SQLite file, or a fresh database on your Postgres or MySQL server.",
 							"Browser tests (build tag e2e) drive Chromium with Playwright-Go, one browser for the run and a fresh context per test. They check focus rings, the toast region, that no third-party request is made, that nothing scrolls sideways, that the page loads without JavaScript, and an axe accessibility scan when axe-core is available.",
 						),
+						P("A plain go test ./... runs only the unit and integration tests and needs no browser. Projects created with --e2e=false have no browser tests at all. Point the generic checks in e2e_generic_test.go at your own pages as the app grows: they only load the home page at first."),
 					}},
 				},
 			},
 			{
 				Slug:    "deployment",
 				Title:   "Deployment",
-				Summary: "How this site is deployed, and where the step-by-step guide lives.",
+				Summary: "How to deploy a GOTTH+ project: the image, the database, and what to set before the first deploy.",
 				Sections: []Section{
 					{Title: "The short version", Blocks: []Block{
-						P("The image is built by the Dockerfile in the repository. It is distroless and runs as a non-root user with GoEnv=production on port 8080, and the SQLite file lives on a volume at /data. Each deploy runs the migrator, then starts the server. Put a TLS-terminating proxy or platform in front of it, point its health check at /healthz, and set TrustedProxies to that proxy."),
-						P("The full guide, with commands for a server running Docker behind Caddy, and notes for hosted platforms, is DEPLOYMENT.md in the repository."),
+						P("make docker builds the production image from the Dockerfile (--docker). It is distroless and runs as a non-root user with GoEnv=production on port 8080. Fly.io, Railway, Render and most container platforms build that Dockerfile as it is."),
+						Code("make docker\ndocker run --rm -p 8080:8080 -v my-app-data:/data my-app              # SQLite\ndocker run --rm -p 8080:8080 -e DatabaseURL='...' my-app             # Postgres or MySQL"),
+						P("Put a TLS-terminating proxy or platform in front of it, and point its health check at /healthz, which pings the database. Behind a proxy, read Security: Behind a proxy, or every visitor shares one rate-limit bucket."),
+					}},
+					{Title: "The database", Blocks: []Block{
+						P("The image creates no tables: AutoMigrate only runs in the development seed route. Run your reviewed migrations before the first start, and before each deploy that changes the schema. Data: SQLite, Postgres or MySQL describes the options."),
+						UL(
+							"SQLite: the file is on the /data volume (DatabasePath=/data/app.db). Keep the volume across deploys and back it up.",
+							"Postgres or MySQL: pass DatabaseURL from the platform's secret store, connect over TLS, and log in as the app's own user with only the privileges it needs.",
+						),
 					}},
 					{Title: "Before the first deploy", Blocks: []Block{
 						UL(
-							"GoEnv=production, so HSTS, Secure cookies and JSON logs are on and the strict limits apply.",
+							"GoEnv=production, so HSTS, Secure cookies and JSON logs are on, the strict rate limits apply, and /seed is gone.",
 							"Configuration in the platform's environment or secret store, never a committed .env.",
 							"The JavaScript libraries committed and pinned. Production never runs download-js.sh.",
-							"Backups for the database volume, tested by restoring them.",
+							"With sign-in: BaseURL set to the public https:// address, and every setting the chosen option needs. Production refuses to start without them.",
+							"With a cache: CacheURL pointing at a server only the app can reach.",
+							"Backups of the database, tested by restoring them.",
 						),
+						P("The generated SECURITY.md has the full checklist."),
 					}},
 				},
 			},

@@ -67,7 +67,7 @@ templ DocsNav(current string) {
 	</div>
 }
 
-// DocBlock renders one block of a section. Kind is "p", "code", "ul" or "table".
+// DocBlock renders one block of a section. Kind is "p", "code", "ul", "table" or "links".
 templ DocBlock(b docs.Block) {
 	if b.Kind == "p" {
 		<p class="text-base leading-relaxed text-neutral-200">{ b.Text }</p>
@@ -77,6 +77,17 @@ templ DocBlock(b docs.Block) {
 		<ul class="list-disc space-y-2 pl-6 text-base leading-relaxed text-neutral-200 marker:text-neutral-500">
 			for _, item := range b.Items {
 				<li>{ item }</li>
+			}
+		</ul>
+	} else if b.Kind == "links" {
+		<ul class="list-disc space-y-2 pl-6 text-base leading-relaxed text-neutral-200 marker:text-neutral-500">
+			for _, l := range b.Links {
+				<li>
+					<a class="font-medium text-white underline underline-offset-4 hover:text-neutral-300" href={ templ.SafeURL(l.URL) } target="_blank" rel="noopener noreferrer">{ l.Label }</a>
+					if l.Note != "" {
+						<span class="text-neutral-300">: { l.Note }</span>
+					}
+				</li>
 			}
 		</ul>
 	} else if b.Kind == "table" {
